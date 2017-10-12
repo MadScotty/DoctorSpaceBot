@@ -58,15 +58,17 @@ async def listen(client, message, channel, user):
 
     if message.content == ".triviastart" and not is_running:
         is_running = True
-        await client.send_message(channel, "OK!  Let's get this party started!\n" + "DoctorSpaceBot Trivia v0.3 because v0.1 and v0.2 didn't work at all.\n*Type .help for a list of commands*")
+        is_answered = True
+        await client.send_message(channel, "OK!  Let's get this party started!\n" + "DoctorSpaceBot Trivia v1.1 because v0.1 and v0.2 didn't work at all, and 1.0 had shit code.\n*Type .help for a list of commands*")
         while is_running:
             if idle_counter >= 5:
                 is_running = False
                 await client.send_message(channel, "Trivia stopped due to inactivity.  Type .triviastart to start!")
-                break
+                return
             if is_answered:
                 idle_counter += 1
                 await next_question(client, channel)
+        await client.send_message(channel, "Trivia stopped =[")
 
     if message.content == ".triviastop" and is_running:
         is_running = False
@@ -79,26 +81,13 @@ async def listen(client, message, channel, user):
         await client.send_message(channel, get_leaderboard())
 
     if message.content.startswith(".report"):
-        await client.send_message(channel, "OK, Report has been sent for question " + str(q_number))
-        report_message = str(user) + " reported question number " + str(q_number) + " because: "
+        await client.send_message(channel, "OK, Report sent!")
+        report_message = str(user) + " sent a report: "
         if len(message.content) > 7:
             report_message += message.content[7:]
         else:
-            report_message += "(no reason given)"
+            report_message += "(no additional info given)"
         await client.send_message(discord.utils.get(message.server.members, name="MadScotty"), report_message)
-
-# Returns a help box using Discord's code formatting.
-def helpbox():
-    
-    formatted_string = "```"
-    formatted_string += ".help            - Displays this box\n" + \
-                        ".triviastart     - Starts the trivia game\n" + \
-                        ".triviastop      - Stops the trivia game\n" + \
-                        ".score           - Displays your current score\n" + \
-                        ".leaderboard     - Displays the current top players\n" + \
-                        ".report (reason) - Reports a bad/incorrect question or answer"
-    formatted_string += "```"
-    return formatted_string
 
 # Returns the user's score
 def get_score(user):
@@ -217,7 +206,6 @@ def get_hint(hint_number):
             temp_hint += hint[i]
 
     hint = temp_hint
-
 
 # Handles question asking and hint giving.
 async def next_question(client, channel):

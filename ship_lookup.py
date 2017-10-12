@@ -23,11 +23,14 @@ from bs4 import BeautifulSoup as soup # BeautifulSoup is too much to type.  Who 
 
 # Other globals
 ship_index = []
+has_error = False
 
 # Grab the ship name from the index
 async def ship_finder(ship_name):
     global ship_index
+    global has_error
 
+    has_error = False
     ship_name = ship_name.lower()
 
     await get_ship_index()
@@ -55,7 +58,8 @@ async def ship_finder(ship_name):
 
     ship_info = await parse_ship_info(link)
     if ship_info == -1:
-        return "Something borked with ship stat parsing.  Scotty has been notified"
+        has_error = True
+        return -1
     else:
         return make_table(ship_info)
 
@@ -63,6 +67,7 @@ async def ship_finder(ship_name):
 async def get_ship_index():
 
     global ship_index
+    global has_error
 
     # Pull rendered version of page
     with timeout(10):
@@ -74,7 +79,8 @@ async def get_ship_index():
 
                 except:
                     print("Failed to load Category:Ships with satus code ") + str(page.status)
-                    return
+                    has_error = True
+                    return -1
 
     # Pass to BeautifulSoup then scrape just the table, then make a list of the hyperlinks
     # Example item:
@@ -92,6 +98,7 @@ async def get_ship_index():
 
 # Pull info from the infobox on the ship page
 async def parse_ship_info(link):
+    global has_error
 
     rendered_link = link + "?action=render"
 
@@ -104,6 +111,7 @@ async def parse_ship_info(link):
                     raw_page = await page.text()
                 except:
                     print("Failed to load ship page " + link + " with satus code ") + str(page.status)
+                    has_error = True
                     return -1
 
     # Pass to BeautifulSoup then scrape the infobox table
@@ -138,7 +146,7 @@ async def parse_ship_info(link):
     start = infobox_item.find('src')
     end = infobox_item.find('"', start + 5, len(infobox_item))
     if start == -1 or end == -1:
-        ship_info['img_link'] = "Unknown"
+        ship_info['img_link'] = -1
     else:
         ship_info["img_link"] = "https://starcitizen.tools/" + infobox_item[start + 6:end]
         
@@ -151,7 +159,7 @@ async def parse_ship_info(link):
         if "Manufacturer" in i.text:
             infobox_item = i.text
     if infobox_item == "":
-        ship_info["manf"] = "Unknown"
+        ship_info["manf"] = -1
     else:
         end = infobox_item.find('\xa0')
         ship_info["manf"] = infobox_item[12:end]
@@ -170,7 +178,7 @@ async def parse_ship_info(link):
         elif "Focus" in i.text:
             infobox_item = i.text
     if infobox_item == "":
-        ship_info["focus"] = "Unknown"
+        ship_info["focus"] = -1
     elif ship_info['focus'] == "":
         ship_info["focus"] = infobox_item[5:]
 
@@ -180,7 +188,7 @@ async def parse_ship_info(link):
         if "Production State" in i.text:
             infobox_item = i.text
     if infobox_item == "":
-        ship_info["prod_state"] = "Unknown"
+        ship_info["prod_state"] = -1
     else:
         ship_info["prod_state"] = infobox_item[16:]
 
@@ -190,7 +198,7 @@ async def parse_ship_info(link):
         if "Maximum Crew" in i.text:
             infobox_item = i.text
     if infobox_item == "":
-        ship_info["crew"] = "Unknown"
+        ship_info["crew"] = -1
     else:
         ship_info["crew"] = infobox_item[12:]
 
@@ -200,7 +208,7 @@ async def parse_ship_info(link):
         if "Cargo Capacity" in i.text:
             infobox_item = i.text
     if infobox_item == "":
-        ship_info["cargo"] = "Unknown"
+        ship_info["cargo"] = -1
     else:
         ship_info["cargo"] = infobox_item[14:]
 
@@ -210,7 +218,7 @@ async def parse_ship_info(link):
         if "Pledge Cost" in i.text:
             infobox_item = i.text
     if infobox_item == "":
-        ship_info["price"] = "Unknown"
+        ship_info["price"] = -1
     else:
         ship_info["price"] = infobox_item[11:]
 
@@ -220,7 +228,7 @@ async def parse_ship_info(link):
         if "Null-cargo Mass" in i.text:
             infobox_item = i.text
     if infobox_item == "":
-        ship_info["mass"] = "Unknown"
+        ship_info["mass"] = -1
     else:
         ship_info["mass"] = infobox_item[15:]
 
@@ -230,7 +238,7 @@ async def parse_ship_info(link):
         if "Max. SCM Speed" in i.text:
             infobox_item = i.text
     if infobox_item == "":
-        ship_info["speed"] = "Unknown"
+        ship_info["speed"] = -1
     else:
         ship_info["speed"] = infobox_item[14:]
 
@@ -240,7 +248,7 @@ async def parse_ship_info(link):
         if "Max. Afterburner Speed" in i.text:
             infobox_item = i.text
     if infobox_item == "":
-        ship_info["ab_speed"] = "Unknown"
+        ship_info["ab_speed"] = -1
     else:
         ship_info["ab_speed"] = infobox_item[22:]
 
@@ -250,7 +258,7 @@ async def parse_ship_info(link):
         if "Length" in i.text:
             infobox_item = i.text
     if infobox_item == "":
-        ship_info["length"] = "Unknown"
+        ship_info["length"] = -1
     else:
         ship_info["length"] = infobox_item[6:]
 
@@ -260,7 +268,7 @@ async def parse_ship_info(link):
         if "Height" in i.text:
             infobox_item = i.text
     if infobox_item == "":
-        ship_info["height"] = "Unknown"
+        ship_info["height"] = -1
     else:
         ship_info["height"] = infobox_item[6:]
 
@@ -280,24 +288,24 @@ async def parse_ship_info(link):
 def make_table(ship_info):
     ship_embed = discord.Embed(title = ship_info['name'], url = str(ship_info['link']), description = "--------------------", color = 0x23af40,)
     
-    ship_embed.add_field(name = "Manufacturer", value = ship_info["manf"], inline = True)
-    ship_embed.add_field(name = "Focus", value = ship_info["focus"], inline = True)
+    if ship_info["manf"] != -1: ship_embed.add_field(name = "Manufacturer", value = ship_info["manf"], inline = True)
+    if ship_info["focus"] != -1: ship_embed.add_field(name = "Focus", value = ship_info["focus"], inline = True)
 
-    ship_embed.add_field(name = "Production State", value = ship_info["prod_state"], inline = True)
-    ship_embed.add_field(name = "Crew", value = ship_info["crew"], inline = True)
+    if ship_info["prod_state"] != -1: ship_embed.add_field(name = "Production State", value = ship_info["prod_state"], inline = True)
+    if ship_info["crew"] != -1: ship_embed.add_field(name = "Crew", value = ship_info["crew"], inline = True)
 
-    ship_embed.add_field(name = "Cargo", value = ship_info["cargo"], inline = True)
-    ship_embed.add_field(name = "Null-cargo Mass", value = ship_info["mass"], inline = True)
+    if ship_info["cargo"] != -1: ship_embed.add_field(name = "Cargo", value = ship_info["cargo"], inline = True)
+    if ship_info["mass"] != -1: ship_embed.add_field(name = "Null-cargo Mass", value = ship_info["mass"], inline = True)
 
-    ship_embed.add_field(name = "Max SCM Speed", value = ship_info["speed"], inline = True)
-    ship_embed.add_field(name = "Max AFB Speed", value = ship_info["ab_speed"], inline = True)
+    if ship_info["speed"] != -1: ship_embed.add_field(name = "Max SCM Speed", value = ship_info["speed"], inline = True)
+    if ship_info["ab_speed"] != -1: ship_embed.add_field(name = "Max AFB Speed", value = ship_info["ab_speed"], inline = True)
 
-    ship_embed.add_field(name = "Pledge Cost", value = ship_info["price"], inline = True)
-    ship_embed.add_field(name = "Length", value = ship_info["length"], inline = True)
+    if ship_info["price"] != -1: ship_embed.add_field(name = "Pledge Cost", value = ship_info["price"], inline = True)
+    if ship_info["length"] != -1: ship_embed.add_field(name = "Length", value = ship_info["length"], inline = True)
 
-    ship_embed.add_field(name = "Height", value = ship_info["height"], inline = True)
-    ship_embed.add_field(name = "Beam", value = ship_info["beam"], inline = True)
+    if ship_info["height"] != -1: ship_embed.add_field(name = "Height", value = ship_info["height"], inline = True)
+    if ship_info["beam"] != -1: ship_embed.add_field(name = "Beam", value = ship_info["beam"], inline = True)
 
-    ship_embed.set_image(url=str(ship_info['img_link']))
+    if ship_info["img_link"] != -1: ship_embed.set_image(url=str(ship_info['img_link']))
 
     return ship_embed
