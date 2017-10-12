@@ -28,6 +28,7 @@ description = "Hopefully I don't explode"
 version_number = "1.1"
 
 client = discord.Client()
+admins = ["MadScotty#1628", "TheMezMeister#6711"]
 
 # Cleans up main file and makes bot easier to extend
 trivia_command_list = [".triviastart", ".triviastop", ".score", ".leaderboard"]
@@ -36,7 +37,7 @@ trivia_command_list = [".triviastart", ".triviastop", ".score", ".leaderboard"]
 async def on_message(message):
 
     # Bot is misbehaving.  Time to DIE
-    if message.content == '.die' and message.author == discord.utils.get(message.server.members, name = "MadScotty"):
+    if message.content == '.die' and str(message.author) in admins:
         await client.send_message(message.channel, "Committing Sudoku...")
         await client.logout()
 
@@ -89,7 +90,7 @@ async def helpbox():
                         ".prodschedule                - Posts link to current production schedule\n" + \
                         ".ship (Ship Name)            - Displays info about a ship\n" + \
                         ".changelog                   - Sends a PM with the current changelog\n\n" + \
-                        'Trivia Commands: (Only functions in a channel named "trivia")\n' + \
+                        'Trivia Commands: (if enabled)\n' + \
                         ".triviastart                 - Starts the trivia game\n" + \
                         ".triviastop                  - Stops the trivia game\n" + \
                         ".score                       - Displays your current score\n" + \
