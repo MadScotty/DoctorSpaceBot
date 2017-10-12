@@ -60,7 +60,7 @@ async def listen(client, message, channel, user):
         is_running = True
         await client.send_message(channel, "OK!  Let's get this party started!\n" + "DoctorSpaceBot Trivia v0.3 because v0.1 and v0.2 didn't work at all.\n*Type .help for a list of commands*")
         while is_running:
-            if idle_counter >= 3:
+            if idle_counter >= 5:
                 is_running = False
                 await client.send_message(channel, "Trivia stopped due to inactivity.  Type .triviastart to start!")
                 break
@@ -89,6 +89,7 @@ async def listen(client, message, channel, user):
 
 # Returns a help box using Discord's code formatting.
 def helpbox():
+    
     formatted_string = "```"
     formatted_string += ".help            - Displays this box\n" + \
                         ".triviastart     - Starts the trivia game\n" + \

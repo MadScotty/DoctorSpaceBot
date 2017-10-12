@@ -14,6 +14,7 @@ END LICENSE
 import discord
 import trivia
 import logging
+import ship_lookup
 
 # Enables logging.  Code shamelessly stolen from the discord.py API documentation site.
 # Source:  http://discordpy.readthedocs.io/en/latest/logging.html#logging-setup
@@ -24,6 +25,7 @@ handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(me
 logger.addHandler(handler)
 
 description = "Hopefully I don't explode"
+
 client = discord.Client()
 
 # Cleans up main file and makes bot easier to extend
@@ -41,22 +43,31 @@ async def on_message(message):
     if message.author == client.user:
         return
 
+    if message.content == '.prodschedule':
+        await client.send_message(message.channel, "https://robertsspaceindustries.com/schedule-report")
+
+    if message.content.startswith(".ship"):
+        ship_name = str(message.content)
+        try:
+            await client.send_message(message.channel, embed = await ship_lookup.ship_finder(ship_name[6:]))
+        except:
+            await client.send_message(message.channel, "Ship not found")
+
     # Reset idle counter if anything is said in the trivia channel by anyone other than the bot
     if str(message.channel) == "trivia":
         trivia.idle_counter = 0
+        
+        # Check for trivia commands
+        if message.content in trivia_command_list:
+            await trivia.listen(client, message, message.channel, message.author)
 
-    # Check for trivia commands
-    if message.content in trivia_command_list and str(message.channel) == "trivia":
-        await trivia.listen(client, message, message.channel, message.author)
+        # Check for trivia report.  Seperate to allow .startswith()
+        elif message.content.startswith(".report"):
+            await trivia.listen(client, message, message.channel, str(message.author))
 
-    # Check for trivia report.  Seperate to allow .startswith()
-    if message.content.startswith(".report"):
-        await trivia.listen(client, message, message.channel, str(message.author))
-
-    # A little less graceful to do things this way, but I want all the "listening" done in one place
-    if not trivia.is_answered and str(message.channel) == "trivia" and str(message.content).lower() == trivia.answer.lower():
-            await trivia.question_answered(client, message.author, message.channel)
-
+        # A little less graceful to do things this way, but I want all the "listening" done in one place
+        if not trivia.is_answered and str(message.content).lower() == str(trivia.answer).lower():
+                await trivia.question_answered(client, message.author, message.channel)
 
 @client.event
 async def on_server_join(server):
