@@ -25,7 +25,7 @@ handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(me
 logger.addHandler(handler)
 
 description = "Hopefully I don't explode"
-version_number = "1.1"
+version_number = "1.2"
 
 client = discord.Client()
 admins = ["MadScotty#1628", "TheMezMeister#6711"]
@@ -64,7 +64,7 @@ async def on_message(message):
         await client.send_message(message.author, await helpbox())
 
     elif message.content == ".changelog":
-        await client.send_message(message.channel, "Okay, PM'ing you the current changelog.  (Current version: " + version_number + ")")
+        await client.send_message(message.channel, "Okay, PM'ing you this bot's current changelog.  (Current version: " + version_number + ")")
         await client.send_message(message.author, await changelog())
 
     elif str(message.channel) == "trivia":
@@ -89,7 +89,7 @@ async def helpbox():
                         ".help                        - Displays this box\n" + \
                         ".prodschedule                - Posts link to current production schedule\n" + \
                         ".ship (Ship Name)            - Displays info about a ship\n" + \
-                        ".changelog                   - Sends a PM with the current changelog\n\n" + \
+                        ".changelog                   - Sends a PM with this bot's current changelog\n\n" + \
                         'Trivia Commands: (if enabled)\n' + \
                         ".triviastart                 - Starts the trivia game\n" + \
                         ".triviastop                  - Stops the trivia game\n" + \
