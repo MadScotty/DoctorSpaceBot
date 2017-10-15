@@ -1,5 +1,7 @@
 # DoctorSpaceBot
-Star Citizen Discord Bot made for the Star Citizen organization SSEA and alliance member Discord Servers
+Star Citizen Discord Bot made for the Star Citizen organization SSEA and alliance member Discord servers.
+
+Type .help for a list of commands
 
 Current version:  1.2
 
